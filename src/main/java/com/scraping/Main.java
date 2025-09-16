@@ -32,8 +32,16 @@ public class Main {
             loginPage.open();
             SleepUtils.sleep(2000); // Pause for 2 seconds
 
+            // Get credentials from environment variables
+            String username = System.getenv("APEC_USERNAME");
+            String password = System.getenv("APEC_PASSWORD");
+
+            if (username == null || password == null) {
+                throw new RuntimeException("Les identifiants APEC_USERNAME et APEC_PASSWORD doivent être définis.");
+            }
+
             // Perform login with empty credentials (replace with actual credentials)
-            loginPage.login("", "");
+            loginPage.login(username, password);
             SleepUtils.sleep(2000); // Pause for 2 seconds
 
             // Change the job title on the profile page

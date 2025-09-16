@@ -1,33 +1,36 @@
 package com.scraping.utils;
 
+import java.net.URL;
+import java.net.MalformedURLException;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class WebDriverUtils {
     private static WebDriver driver; // Static WebDriver instance to be used across the application
 
     // Method to initialize the WebDriver with specific Chrome options
     public static void initWebDriver() {
-        // Set the path to the ChromeDriver executable
-        System.setProperty("webdriver.chrome.driver", "driver/chromedriver.exe");
+        try {
+            // Utilise l'URL du conteneur Selenium définie par la variable d'environnement
+            String seleniumHubUrl = System.getenv("SELENIUM_HUB_URL");
+            if (seleniumHubUrl == null) {
+                seleniumHubUrl = "http://localhost:4444/wd/hub"; // URL par défaut
+            }
 
-        // Initialize Chrome options
-        ChromeOptions options = new ChromeOptions();
+            URL url = new URL(seleniumHubUrl);
 
-        // Set the path to the Chrome binary
-        options.setBinary("browser/chrome-win/chrome.exe");
+            // Configurer les capacités pour Chrome
+            DesiredCapabilities capabilities = new DesiredCapabilities();
+            capabilities.setBrowserName("chrome");
 
-        // Argument to solve "Unable to establish websocket connection" issue
-        options.addArguments("--remote-allow-origins=*");
+            // Initialiser le WebDriver avec les capacités configurées
+            driver = new RemoteWebDriver(url, capabilities);
 
-        // Arguments to run Chrome in headless mode and avoid displaying the browser GUI
-        options.addArguments("--headless=new");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--window-size=1920,1200");
-
-        // Initialize the WebDriver with the specified options
-        driver = new ChromeDriver(options);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     // Method to get the WebDriver instance
