@@ -1,0 +1,12 @@
+target/
+!.gitignore
+.git/
+.mvn/
+.m2/
+*.log
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+.DS_Store
