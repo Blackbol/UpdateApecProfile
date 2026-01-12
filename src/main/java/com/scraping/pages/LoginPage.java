@@ -1,5 +1,6 @@
 package com.scraping.pages;
 
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -12,6 +13,9 @@ public class LoginPage {
     private WebDriver driver; // WebDriver instance to interact with the browser
 
     // Define WebElements using XPath to locate them on the webpage
+    @FindBy(xpath = "/html/body/div[4]/div[2]/div/div[1]/div/div[2]/div/button[2]")
+    private WebElement refuseCookie; // WebElement for the cookie refusal button
+
     @FindBy(xpath = "/html/body/div[1]/div/div[1]/div/form/div[3]/input")
     private WebElement usernameField; // WebElement for the username input field
 
@@ -34,6 +38,15 @@ public class LoginPage {
             Thread.sleep(2000); // Pause for 2 seconds to allow the page to load
         } catch (InterruptedException e) {
             e.printStackTrace(); // Print stack trace if the sleep is interrupted
+        }
+        try {
+            // Check if the cookie banner is displayed and click to refuse if it is
+            if (refuseCookie.isDisplayed()) {
+                refuseCookie.click();
+                System.out.println("The cookie banner close on login page."); // Print message if cookie banner is display
+            }
+        } catch (NoSuchElementException e) {
+            System.out.println("The cookie banner was not displayed on login page."); // Print message if cookie banner is not displayed
         }
     }
 
