@@ -1,4 +1,0 @@
-FROM mcuadros/ofelia:0.3
-
-# Installer le client Docker
-RUN apk add --no-cache docker-cli
