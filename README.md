@@ -68,26 +68,6 @@ services:
     networks:
       - app-network
 
-  # Scheduler service: Uses Ofelia to schedule the execution of the services
-  scheduler:
-    image: ghcr.io/blackbol/ofelia_docker\:latest
-    container_name: scheduler
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock\:ro  # Access to Docker socket
-    command: daemon --docker
-    labels:
-      # Start selenium at 08:50 AM
-      ofelia.job-run.start_selenium.schedule: "50 8 * * *"
-      ofelia.job-run.start_selenium.command: "docker start selenium_standalone"
-
-      # Start updateapecprofile at 08:55 AM and monitor its execution
-      ofelia.job-run.start_updateapecprofile.schedule: "55 8 * * *"
-      ofelia.job-run.start_updateapecprofile.command: >
-        sh -c 'docker start UpdateApecProfile &&
-        while docker inspect -f "{{.State.Running}}" UpdateApecProfile | grep -q "true"; do
-          sleep 10;
-        done;
-        docker stop selenium_standalone'
     restart: always  # Ensures the scheduler is always running
 
 networks:
