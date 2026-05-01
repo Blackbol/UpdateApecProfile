@@ -13,7 +13,7 @@ public class WebDriverUtils {
     // Method to initialize the WebDriver with specific Chrome options
     public static void initWebDriver() {
         try {
-            // Utilise l'URL du conteneur Selenium définie par la variable d'environnement
+            // Uses the Selenium container URL defined by the environment variable
             String seleniumHubUrl = System.getenv("SELENIUM_HUB_URL");
             if (seleniumHubUrl == null) {
                 seleniumHubUrl = "http://localhost:4444/wd/hub"; // URL par défaut
@@ -21,11 +21,11 @@ public class WebDriverUtils {
 
             URL url = new URL(seleniumHubUrl);
 
-            // Configurer les capacités pour Chrome
+            // Configure capabilities for Chrome
             DesiredCapabilities capabilities = new DesiredCapabilities();
             capabilities.setBrowserName("chrome");
 
-            // Initialiser le WebDriver avec les capacités configurées
+            // Initialize the WebDriver with the configured capabilities
             driver = new RemoteWebDriver(url, capabilities);
 
         } catch (MalformedURLException e) {
