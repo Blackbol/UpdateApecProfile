@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.tinylog.Logger;
 
 import com.scraping.utils.SleepUtils;
 import com.scraping.utils.WebDriverUtils;
@@ -34,20 +35,23 @@ public class ProfilPage {
             // Check if the cookie banner is displayed and click to refuse if it is
             if (refuseCookie.isDisplayed()) {
                 refuseCookie.click();
-                System.out.println("The cookie banner close on profil page."); // Print message if cookie banner is display
+                Logger.debug("Click on refuseCookie. The cookie banner close on profil page."); // Print message if cookie banner is display
             }
         } catch (NoSuchElementException e) {
-            System.out.println("The cookie banner was not displayed on profil page."); // Print message if cookie banner is not displayed
+            Logger.debug("The cookie banner was not displayed on profil page."); // Print message if cookie banner is not displayed
         }
         SleepUtils.sleep(2000); // Pause for 2 seconds
 
         posteRechercher.clear(); // Clear the current job position field
+        Logger.debug("Clean posteRechercher");
         SleepUtils.sleep(2000); // Pause for 2 seconds
 
         posteRechercher.sendKeys(nouveauPoste); // Enter the new job position
+        Logger.debug("Send nouveauPoste in posteRechercher");
         SleepUtils.sleep(2000); // Pause for 2 seconds
 
         saveButton.click(); // Click the save button to save the new job position
+        Logger.debug("Click on saveButton");
         SleepUtils.sleep(2000); // Pause for 2 seconds
     }
 }

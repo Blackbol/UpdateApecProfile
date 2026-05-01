@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.tinylog.Logger;
 
 import com.scraping.utils.SleepUtils;
 import com.scraping.utils.WebDriverUtils;
@@ -34,6 +35,8 @@ public class LoginPage {
     // Method to open the login page
     public void open() {
         driver.get("https://www.apec.fr/candidat/mon-espace/profil.html/carte-visite"); // Navigate to the login page URL
+        Logger.debug("Open APEC");
+
         try {
             Thread.sleep(2000); // Pause for 2 seconds to allow the page to load
         } catch (InterruptedException e) {
@@ -43,22 +46,25 @@ public class LoginPage {
             // Check if the cookie banner is displayed and click to refuse if it is
             if (refuseCookie.isDisplayed()) {
                 refuseCookie.click();
-                System.out.println("The cookie banner close on login page."); // Print message if cookie banner is display
+                Logger.debug("Click on refuseCookie. The cookie banner close on login page."); // Print message if cookie banner is display
             }
         } catch (NoSuchElementException e) {
-            System.out.println("The cookie banner was not displayed on login page."); // Print message if cookie banner is not displayed
+            Logger.debug("The cookie banner was not displayed on login page."); // Print message if cookie banner is not displayed
         }
     }
 
     // Method to perform login with provided username and password
     public void login(String username, String password) {
         usernameField.sendKeys(username); // Enter the username
+        Logger.debug("Send username in usernameField");
         SleepUtils.sleep(2000); // Pause for 2 seconds
 
         passwordField.sendKeys(password); // Enter the password
+        Logger.debug("Send username in passwordField");
         SleepUtils.sleep(2000); // Pause for 2 seconds
 
         loginButton.click(); // Click the login button
+        Logger.debug("Click on loginButton");
         SleepUtils.sleep(2000); // Pause for 2 seconds
     }
 }
