@@ -13,16 +13,16 @@ public class LoginPage {
     private WebDriver driver; // WebDriver instance to interact with the browser
 
     // Define WebElements using XPath to locate them on the webpage
-    @FindBy(xpath = "/html/body/div[4]/div[2]/div/div[1]/div/div[2]/div/button[2]")
+    @FindBy(xpath = "/html/body/div[1]/div/div/div/div/div/div[3]/button[2]")
     private WebElement refuseCookie; // WebElement for the cookie refusal button
 
-    @FindBy(xpath = "/html/body/div[1]/div/div[1]/div/form/div[3]/input")
+    @FindBy(xpath = "/html/body/div[2]/div/div[1]/div/form/div[3]/input")
     private WebElement usernameField; // WebElement for the username input field
 
-    @FindBy(xpath = "/html/body/div[1]/div/div[1]/div/form/div[4]/input")
+    @FindBy(xpath = "/html/body/div[2]/div/div[1]/div/form/div[4]/input")
     private WebElement passwordField; // WebElement for the password input field
 
-    @FindBy(xpath = "/html/body/div[1]/div/div[1]/div/form/div[5]/button")
+    @FindBy(xpath = "/html/body/div[2]/div/div[1]/div/form/div[5]/button")
     private WebElement loginButton; // WebElement for the login button
 
     // Constructor to initialize the WebDriver and WebElements
