@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.tinylog.Logger;
 
 public class WebDriverUtils {
     private static WebDriver driver; // Static WebDriver instance to be used across the application
@@ -17,6 +18,7 @@ public class WebDriverUtils {
             String seleniumHubUrl = System.getenv("SELENIUM_HUB_URL");
             if (seleniumHubUrl == null) {
                 seleniumHubUrl = "http://localhost:4444/wd/hub"; // URL par défaut
+                Logger.debug("Default seleniumHubUrl = {}", seleniumHubUrl);
             }
 
             URL url = new URL(seleniumHubUrl);
@@ -24,9 +26,11 @@ public class WebDriverUtils {
             // Configure capabilities for Chrome
             DesiredCapabilities capabilities = new DesiredCapabilities();
             capabilities.setBrowserName("chrome");
+            Logger.debug("Capabilities set = chrome");
 
             // Initialize the WebDriver with the configured capabilities
             driver = new RemoteWebDriver(url, capabilities);
+            Logger.debug("Webdriver init");
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -42,6 +46,7 @@ public class WebDriverUtils {
     public static void quitWebDriver() {
         if (driver != null) {
             driver.quit(); // Quit the WebDriver if it is not null
+            Logger.debug("Webdriver quit");
         }
     }
 }
