@@ -37,7 +37,7 @@ public class Main {
             String password = System.getenv("APEC_PASSWORD");
 
             if (username == null || password == null) {
-                throw new RuntimeException("Les identifiants APEC_USERNAME et APEC_PASSWORD doivent être définis.");
+                throw new RuntimeException("The APEC_USERNAME and APEC_PASSWORD identifiers must be defined.");
             }
 
             // Perform login with empty credentials (replace with actual credentials)
