@@ -23,9 +23,11 @@ services:
       selenium:
         condition: service_healthy
     environment:
+      - TZ=Europe/Paris
       - SELENIUM_HUB_URL=http://selenium:4444/wd/hub
       - APEC_USERNAME=apec_username
       - APEC_PASSWORD=apec_password
+      - LOGGER=prod
     networks:
       - app-network
 

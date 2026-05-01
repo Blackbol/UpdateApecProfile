@@ -61,10 +61,13 @@ services:
       selenium:
         condition: service_healthy  # Wait for Selenium to be healthy
     environment:
+      - TZ=Europe/Paris
       - SELENIUM_HUB_URL=http://selenium:4444/wd/hub
       # Add your credentials via environment variables or a .env file
       - APEC_USERNAME=apec_username
       - APEC_PASSWORD=apec_password
+      - LOGGER=prod
+      # prod or dev. dev will write sensitive information to the logs
     networks:
       - app-network
 
