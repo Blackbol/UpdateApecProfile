@@ -1,34 +1,20 @@
 services:
-  selenium:
-    image: selenium/standalone-chrome:latest
-    container_name: selenium_standalone
-    ports:
-      - "4444:4444"
-      - "7900:7900"
-    shm_size: 2g
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   updateapecprofile:
     image: ghcr.io/blackbol/update-apec-profile:latest
+    build: .
     container_name: UpdateApecProfile
-    depends_on:
-      selenium:
-        condition: service_healthy
+    restart: unless-stopped
     environment:
       - TZ=Europe/Paris
-      - SELENIUM_HUB_URL=http://selenium:4444/wd/hub
-      - APEC_USERNAME=apec_username
-      - APEC_PASSWORD=apec_password
-      - LOGGER=prod
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - APEC_USERNAME=ton_email@exemple.com
+      - APEC_PASSWORD=ton_mot_de_passe
+      # Rotation des postes (obligatoire, séparés par des virgules) :
+      - POSTE_DU_JOUR=Ingénieur logiciel, Développeur logiciel, Lead Développeur
+      # Planification au format cron standard (ex: 0 8 * * * pour tous les jours à 08h00) :
+      - CRON_SCHEDULE=0 8 * * *
+      # Exécute une mise à jour dès le démarrage du conteneur (true/false) :
+      - RUN_ON_STARTUP=true
+      - LOG_LEVEL=INFO
+    volumes:
+      # Persistance des cookies de session
+      - ./data:/app/data
