@@ -1,0 +1,5 @@
+playwright==1.49.1
+playwright-stealth==2.0.3
+curl_cffi==0.17.0
+croniter==6.2.4
+python-dotenv==1.2.4

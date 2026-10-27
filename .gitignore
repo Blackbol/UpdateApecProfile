@@ -1,63 +1,48 @@
-# Compiled class files
-*.class
-
-# Package Files
-*.jar
-*.war
-*.ear
-*.zip
-
-# Log files
-*.log
-
-# IDE specific files
-.idea/
-*.iml
-*.ipr
-*.iws
-.vscode/
-*.swp
-*.swo
-
-# Build directories
-target/
-bin/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
-out/
-
-# Dependency directories
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
 lib/
-libraries/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Local configuration files
-*.properties
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Maven or Gradle specific
-.mvn/
-.mvn/wrapper/maven-wrapper.jar
-!**/pom.xml
-
-# Eclipse
-.settings/
-.project
-.classpath
-
-# IntelliJ IDEA
-out/
-
-# NetBeans
-nbproject/
-build/
-
-# Ignore the local maven repository
-.m2/
-
-# Ignore Mac system files
-.DS_Store
-
-# Ignore any environment files
+# Environment Variables
 .env
 .env.local
 
-# Ignore any override files
-*.override
+# Persistent application data (ignore saved cookies with credentials/tokens)
+data/*.json
+!data/.gitkeep
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
