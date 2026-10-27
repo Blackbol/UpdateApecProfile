@@ -3,11 +3,14 @@ import sys
 import logging
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
 from croniter import croniter
 
-# Charge les variables du fichier .env si présent localement
-load_dotenv()
+# Charge les variables du fichier .env si la dépendance est présente
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Configuration du logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
