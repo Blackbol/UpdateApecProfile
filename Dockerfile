@@ -1,20 +1,22 @@
-# Utilise une image Maven pour construire l'application
-FROM maven:3.8.6-eclipse-temurin-17 AS build
+# Image officielle Playwright Python contenant Chromium et toutes les dépendances système requises
+FROM mcr.microsoft.com/playwright/python:v1.49.1-jammy
+
 WORKDIR /app
 
-# Copie les fichiers du projet
-COPY pom.xml .
-COPY src ./src
+# Installation des dépendances Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Construit l'application
-RUN mvn clean package
+# Copie du code source
+COPY src/ ./src/
 
-# Utilise une image légère pour exécuter l'application
-FROM eclipse-temurin:17-jdk-jammy
-WORKDIR /app
+# Création du répertoire de persistance pour les cookies
+RUN mkdir -p /app/data
 
-# Copie le JAR construit depuis l'étape précédente
-COPY --from=build /app/target/UpdateApecProfile-1.0-SNAPSHOT.jar ./app.jar
+ENV PYTHONUNBUFFERED=1
+ENV DATA_DIR=/app/data
 
-# Exécute l'application
-CMD ["java", "-jar", "app.jar"]
+VOLUME ["/app/data"]
+
+# Lance le scheduler par défaut
+CMD ["python", "-m", "src.scheduler"]
