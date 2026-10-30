@@ -4,17 +4,21 @@ services:
     build: .
     container_name: UpdateApecProfile
     restart: unless-stopped
+    ports:
+      # Interface noVNC pour voir le navigateur en direct : http://<ip>:6080
+      - "6080:6080"
     environment:
-      - TZ=Europe/Paris
-      - APEC_USERNAME=ton_email@exemple.com
-      - APEC_PASSWORD=ton_mot_de_passe
+      - APEC_USERNAME=${APEC_USERNAME:-votre_email@exemple.com}
+      - APEC_PASSWORD=${APEC_PASSWORD:-votre_mot_de_passe}
       # Rotation des postes (obligatoire, séparés par des virgules) :
-      - POSTE_DU_JOUR=Ingénieur logiciel, Développeur logiciel, Lead Développeur
+      - POSTE_DU_JOUR=${POSTE_DU_JOUR:-Ingénieur logiciel, Développeur logiciel}
       # Planification au format cron standard (ex: 0 8 * * * pour tous les jours à 08h00) :
       - CRON_SCHEDULE=0 8 * * *
       # Exécute une mise à jour dès le démarrage du conteneur (true/false) :
       - RUN_ON_STARTUP=true
       - LOG_LEVEL=INFO
+      # HEADLESS=false permet le rendu graphique visible via noVNC
+      - HEADLESS=false
     volumes:
-      # Persistance des cookies de session
+      # Persistance des cookies de session et captures de diagnostic
       - ./data:/app/data

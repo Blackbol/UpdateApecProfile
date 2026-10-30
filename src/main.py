@@ -29,7 +29,7 @@ def run() -> bool:
 
     # Étape 1 : Essai avec les cookies déjà enregistrés
     if COOKIES_FILE.exists():
-        logger.info("Fichier de cookies trouvé (%s). Tentative d'appel direct...", COOKIES_FILE)
+        logger.debug("Fichier de cookies trouvé (%s). Tentative d'appel direct...", COOKIES_FILE)
         cookies = load_cookies(COOKIES_FILE)
         success, message = update_carte_de_visite_via_api(cookies, poste_du_jour)
 
@@ -38,10 +38,10 @@ def run() -> bool:
             logger.info("=== Fin du rafraîchissement (sans lancement de navigateur) ===")
             return True
 
-        logger.warning("Cookies expirés ou requête rejetée : %s", message)
-        logger.info("Bascule vers l'authentification Playwright pour régénérer la session...")
+        logger.debug("Appel direct non concluant : %s", message)
+        logger.info("Mise à jour via le navigateur...")
     else:
-        logger.info("Aucun cookie enregistré (%s). Premier lancement nécessaire avec Playwright.", COOKIES_FILE)
+        logger.info("Aucun cookie enregistré. Premier lancement via le navigateur...")
 
     # Étape 2 : Reconnexion et mise à jour via Playwright
     success, message = authenticate_and_update(poste_du_jour, COOKIES_FILE)

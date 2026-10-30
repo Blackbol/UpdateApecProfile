@@ -71,7 +71,7 @@ def update_carte_de_visite_via_api(cookies: dict[str, str], nouveau_poste: str) 
         session = requests.Session(impersonate="chrome124")
         session.cookies.update(cookies)
 
-        logger.info("Tentative de récupération du profil existant via l'API...")
+        logger.debug("Tentative de récupération du profil existant via l'API...")
         get_response = session.get(API_URL, headers=headers, timeout=15)
 
         if get_response.status_code != 200:
@@ -96,7 +96,7 @@ def update_carte_de_visite_via_api(cookies: dict[str, str], nouveau_poste: str) 
 
         # Envoi de la mise à jour (POST)
         headers["content-type"] = "application/json"
-        logger.info("Envoi de la mise à jour de la carte de visite...")
+        logger.debug("Envoi de la mise à jour de la carte de visite...")
         post_response = session.post(
             API_URL,
             headers=headers,
