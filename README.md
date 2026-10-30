@@ -71,6 +71,22 @@ docker compose logs -f
 
 ---
 
+## 🍪 Initialisation facile : Import des cookies (Recommandé)
+
+Si vous êtes déjà connecté sur **apec.fr** sur votre navigateur habituel sans aucun anti-bot, vous pouvez transférer vos cookies de session directement dans le projet pour activer immédiatement le **Niveau 1 (API REST ultra-rapide)** sans jamais subir DataDome :
+
+1. Sur votre navigateur personnel, installez l'extension [Cookie-Editor](https://cookie-editor.com/) (Chrome, Firefox, Edge, Brave).
+2. Rendez-vous sur votre espace [apec.fr](https://www.apec.fr/) et vérifiez que vous êtes bien connecté.
+3. Cliquez sur l'icône de l'extension **Cookie-Editor**, puis sur **Export** > **Export as JSON**.
+4. Collez ou enregistrez ce JSON directement dans le fichier `data/cookies.json` du projet.
+5. Validez vos cookies immédiatement :
+   ```bash
+   docker compose run --rm updateapecprofile python -m src.import_cookies
+   ```
+   > 💡 Une fois importés, vos cookies sont réutilisés et maintenus actifs chaque jour par l'API REST (`curl_cffi`). Le script s'exécute en **0,8 seconde** et aucun navigateur n'a besoin d'être démarré !
+
+---
+
 ## 🛠️ Exécution en local (Développement)
 
 1. **Créer un environnement virtuel Python** :
