@@ -31,7 +31,18 @@ POSTE_DU_JOUR_RAW = os.getenv("POSTE_DU_JOUR", "").strip()
 
 # Paramètres de persistance et de planification
 DATA_DIR = Path(os.getenv("DATA_DIR", "/app/data"))
-COOKIES_FILE = DATA_DIR / "cookies.json"
+
+
+def find_cookies_file() -> Path:
+    """Recherche le fichier de cookies existant (cookies.json ou cookie.json)."""
+    for filename in ("cookies.json", "cookie.json"):
+        candidate = DATA_DIR / filename
+        if candidate.exists() and candidate.stat().st_size > 10:
+            return candidate
+    return DATA_DIR / "cookies.json"
+
+
+COOKIES_FILE = find_cookies_file()
 CRON_SCHEDULE_RAW = os.getenv("CRON_SCHEDULE") or os.getenv("SCHEDULE_TIME", "0 8 * * *").strip()
 RUN_ON_STARTUP = os.getenv("RUN_ON_STARTUP", "true").lower() in ("true", "1", "yes")
 HEADLESS = os.getenv("HEADLESS", "true").lower() in ("true", "1", "yes")

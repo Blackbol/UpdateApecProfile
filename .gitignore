@@ -33,8 +33,8 @@ venv.bak/
 .env
 .env.local
 
-# Persistent application data (ignore saved cookies with credentials/tokens)
-data/*.json
+# Persistent application data, cookies and browser profile
+data/*
 !data/.gitkeep
 
 # Logs
