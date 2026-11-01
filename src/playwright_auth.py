@@ -50,13 +50,52 @@ def human_type(page: Page, locator, text: str) -> None:
     try:
         locator.click()
         time.sleep(random.uniform(0.15, 0.3))
+        locator.fill("")
         for char in text:
             page.keyboard.type(char)
-            time.sleep(random.uniform(0.03, 0.09))
+            time.sleep(random.uniform(0.03, 0.08))
         time.sleep(random.uniform(0.15, 0.3))
+        page.keyboard.press("Tab")
     except Exception as e:
         logger.debug("Saisie human_type : repli sur fill direct (%s)", e)
         locator.fill(text)
+
+
+def is_login_page(page: Page) -> bool:
+    """Vérifie si la page courante est une page de connexion."""
+    url = page.url.lower()
+    return "authentification" in url or "connexion" in url or "login" in url
+
+
+def is_captcha_present(page: Page) -> bool:
+    """
+    Détecte la présence d'un challenge anti-bot (DataDome iframe, slider, Cloudflare, etc.).
+    """
+    try:
+        # 1. Présence d'iframe spécifique DataDome / captcha
+        if page.locator("iframe[title*='DataDome'], iframe[src*='captcha-delivery']").count() > 0:
+            return True
+        for frame in page.frames:
+            f_url = frame.url.lower()
+            if "captcha-delivery" in f_url or "datadome" in f_url:
+                return True
+
+        # 2. Indicateurs textuels dans le contenu ou le titre
+        content = page.content().lower()
+        captcha_indicators = [
+            "captcha-delivery.com",
+            "datadome",
+            "sécuriser votre accès",
+            "accès temporairement restreint",
+            "glisser pour",
+            "glissez pour",
+            "veuillez vérifier que vous êtes un humain",
+        ]
+        if any(ind in content for ind in captcha_indicators):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def find_and_fill_login_form(page: Page, auto_submit: bool = True) -> bool:
@@ -98,13 +137,13 @@ def find_and_fill_login_form(page: Page, auto_submit: bool = True) -> bool:
     # Attente active du formulaire
     email_loc = None
     start_time = time.time()
-    while time.time() - start_time < 12:
+    while time.time() - start_time < 8:
         dismiss_cookie_banner(page)
 
         for sel in email_selectors:
             try:
                 loc = page.locator(sel).first
-                if loc.is_visible(timeout=800):
+                if loc.is_visible(timeout=500):
                     email_loc = loc
                     logger.debug("Champ identifiant trouvé (%s)", sel)
                     break
@@ -113,21 +152,26 @@ def find_and_fill_login_form(page: Page, auto_submit: bool = True) -> bool:
 
         if email_loc:
             break
-        time.sleep(0.8)
+        time.sleep(0.5)
 
     if not email_loc:
         return False
 
-    # Saisie de l'identifiant
-    human_type(page, email_loc, APEC_USERNAME)
-    logger.debug("Identifiant renseigné.")
+    # Saisie de l'identifiant s'il n'est pas déjà renseigné
+    try:
+        current_val = email_loc.input_value()
+    except Exception:
+        current_val = ""
+    if current_val != APEC_USERNAME:
+        human_type(page, email_loc, APEC_USERNAME)
+        logger.debug("Identifiant renseigné.")
 
     # Recherche et saisie du mot de passe
     pwd_loc = None
     for sel in password_selectors:
         try:
             loc = page.locator(sel).first
-            if loc.is_visible(timeout=800):
+            if loc.is_visible(timeout=500):
                 pwd_loc = loc
                 logger.debug("Champ mot de passe trouvé (%s)", sel)
                 break
@@ -138,19 +182,27 @@ def find_and_fill_login_form(page: Page, auto_submit: bool = True) -> bool:
         logger.error("Champ mot de passe introuvable.")
         return False
 
-    human_type(page, pwd_loc, APEC_PASSWORD)
-    logger.debug("Mot de passe renseigné.")
+    try:
+        current_pwd = pwd_loc.input_value()
+    except Exception:
+        current_pwd = ""
+    if not current_pwd:
+        human_type(page, pwd_loc, APEC_PASSWORD)
+        logger.debug("Mot de passe renseigné.")
 
     if not auto_submit:
         logger.debug("Soumission automatique désactivée pour validation dans noVNC.")
         return True
+
+    # Déverrouillage préventif avant clic
+    unlock_form_and_buttons(page)
 
     # Clic sur le bouton de connexion
     submit_loc = None
     for sel in submit_selectors:
         try:
             loc = page.locator(sel).first
-            if loc.is_visible(timeout=800):
+            if loc.is_visible(timeout=500):
                 submit_loc = loc
                 logger.debug("Bouton de connexion trouvé (%s)", sel)
                 break
@@ -233,23 +285,31 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
             try:
                 with open(cookies_path, "r", encoding="utf-8") as f:
                     raw_cookies = json.load(f)
+                cookie_items = []
                 if isinstance(raw_cookies, list):
-                    pw_cookies = []
-                    for c in raw_cookies:
-                        if isinstance(c, dict) and "name" in c and "value" in c:
-                            item = {
-                                "name": c["name"],
-                                "value": str(c["value"]),
-                                "domain": c.get("domain", "www.apec.fr"),
-                                "path": c.get("path", "/"),
-                                "secure": c.get("secure", True),
-                                "httpOnly": c.get("httpOnly", False),
-                            }
-                            if c.get("sameSite") and str(c["sameSite"]).lower() in ("lax", "strict", "none"):
-                                item["sameSite"] = str(c["sameSite"]).capitalize()
-                            pw_cookies.append(item)
-                    if pw_cookies:
-                        context.add_cookies(pw_cookies)
+                    cookie_items = raw_cookies
+                elif isinstance(raw_cookies, dict):
+                    if "cookies" in raw_cookies and isinstance(raw_cookies["cookies"], list):
+                        cookie_items = raw_cookies["cookies"]
+                    else:
+                        cookie_items = [{"name": k, "value": v} for k, v in raw_cookies.items()]
+
+                pw_cookies = []
+                for c in cookie_items:
+                    if isinstance(c, dict) and "name" in c and "value" in c:
+                        item = {
+                            "name": c["name"],
+                            "value": str(c["value"]),
+                            "domain": c.get("domain", "www.apec.fr"),
+                            "path": c.get("path", "/"),
+                            "secure": c.get("secure", True),
+                            "httpOnly": c.get("httpOnly", False),
+                        }
+                        if c.get("sameSite") and str(c["sameSite"]).lower() in ("lax", "strict", "none"):
+                            item["sameSite"] = str(c["sameSite"]).capitalize()
+                        pw_cookies.append(item)
+                if pw_cookies:
+                    context.add_cookies(pw_cookies)
             except Exception as e:
                 logger.warning("Impossible d'injecter les cookies préalables : %s", e)
 
@@ -263,37 +323,16 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
 
             dismiss_cookie_banner(page)
 
-            # Remplir le formulaire
-            filled = find_and_fill_login_form(page, auto_submit=True)
-            if not filled:
-                logger.debug("Formulaire de connexion non présent (session déjà active ou page différente).")
-
-            logger.debug("Vérification de la session utilisateur ('apec.user.cookie')...")
+            logger.debug("Vérification de la session utilisateur...")
             session_established = False
             captcha_alerted = False
+            login_attempted = False
 
-            # Attente jusqu'à 150 secondes pour permettre la validation noVNC
+            # Attente jusqu'à 150 secondes pour permettre la validation et résolution noVNC
             for attempt in range(150):
-                cookies = context.cookies()
-                cookie_names = [c["name"] for c in cookies]
-
-                # Seul 'apec.user.cookie' atteste d'une session authentifiée
-                if "apec.user.cookie" in cookie_names:
-                    session_established = True
-                    logger.info("Session utilisateur validée avec succès.")
-                    break
-
-                # Détection d'un challenge DataDome ou d'une demande de vérification
-                try:
-                    content = page.content().lower()
-                    is_captcha = (
-                        "robot" in content
-                        or "glisser" in content
-                        or "sécuriser votre accès" in content
-                        or "captcha-delivery" in content
-                        or "datadome" in content
-                    )
-                    if is_captcha and not captcha_alerted:
+                # 1. Vérification challenge Captcha / DataDome
+                if is_captcha_present(page):
+                    if not captcha_alerted:
                         captcha_alerted = True
                         logger.warning(
                             "\n========================================================================\n"
@@ -305,19 +344,58 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
                             "Le script surveille la connexion en arrière-plan (jusqu'à 150 secondes)...\n"
                             "========================================================================"
                         )
-                        # Déverrouille les boutons pour que l'utilisateur puisse cliquer
-                        unlock_form_and_buttons(page)
-                except Exception:
-                    pass
+                    unlock_form_and_buttons(page)
+                    time.sleep(1)
+                    continue
 
-                # Quand le captcha est détecté, on NE SPAMME PAS dismiss_cookie_banner
-                # pour ne pas voler le focus de l'utilisateur sur noVNC
-                if not captcha_alerted:
-                    dismiss_cookie_banner(page)
-                else:
-                    # En mode alerte noVNC, s'assure régulièrement que les boutons restent cliquables
-                    if attempt % 5 == 0:
-                        unlock_form_and_buttons(page)
+                if captcha_alerted:
+                    logger.info("Challenge de sécurité résolu ! Poursuite du traitement...")
+                    captcha_alerted = False
+                    time.sleep(1)
+
+                dismiss_cookie_banner(page)
+
+                # 2. Sommes-nous sur une page de connexion ?
+                on_login = is_login_page(page)
+                if on_login:
+                    if not login_attempted or (attempt % 10 == 0):
+                        filled = find_and_fill_login_form(page, auto_submit=True)
+                        if filled:
+                            login_attempted = True
+                            logger.debug("Formulaire de connexion renseigné et soumis.")
+
+                # 3. Vérification de la session authentifiée (hors page de connexion)
+                cookies = context.cookies()
+                cookie_names = [c["name"] for c in cookies]
+
+                if not on_login and "apec.user.cookie" in cookie_names:
+                    # Test réel de validité de la session via l'API interne du navigateur
+                    try:
+                        check_res = context.request.get(
+                            API_URL,
+                            headers={
+                                "accept": "application/json, text/plain, */*",
+                                "origin": "https://www.apec.fr",
+                                "referer": TARGET_URL,
+                            },
+                        )
+                        if check_res.status == 200:
+                            session_established = True
+                            logger.info("Session utilisateur validée avec succès.")
+                            break
+                        elif check_res.status in (401, 403):
+                            logger.debug("Session expirée ou non autorisée (HTTP %s).", check_res.status)
+                    except Exception as e:
+                        logger.debug("Test session API : %s", e)
+
+                    # Vérification alternative si le composant profil est déjà affiché
+                    try:
+                        if page.locator("apec-carte-visite, input[formcontrolname='metierSouhaite']").count() > 0:
+                            session_established = True
+                            logger.info("Session utilisateur validée (carte de visite présente).")
+                            break
+                    except Exception:
+                        pass
 
                 time.sleep(1)
 
@@ -332,17 +410,19 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
 
             if not session_established:
                 logger.warning(
-                    "Le cookie 'apec.user.cookie' n'a pas été détecté. Cookies actuels : %s",
-                    [c["name"] for c in context.cookies()],
+                    "Session candidat non établie après attente. URL actuelle : %s, Titre : '%s'",
+                    page.url,
+                    page.title(),
                 )
-                return False, "Session candidat non établie (apec.user.cookie absent)."
+                return False, "Session candidat non établie (délai dépassé ou authentification requise)."
 
             # Sauvegarde immédiate des cookies acquis
             cookies = context.cookies()
             save_cookies(cookies_path, cookies)
+            save_cookies(DATA_DIR / "cookie.json", cookies)
             logger.debug("Nouveaux cookies sauvegardés dans %s", cookies_path)
 
-            time.sleep(2)
+            time.sleep(1)
 
             # --- Tentative 1 : Mise à jour directe via l'API interne du navigateur ---
             logger.debug("Tentative de mise à jour via l'API interne du navigateur...")
@@ -376,14 +456,21 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
                     )
 
                     if post_res.status in (200, 204):
+                        save_cookies(cookies_path, context.cookies())
+                        save_cookies(DATA_DIR / "cookie.json", context.cookies())
                         return (
                             True,
                             f"Profil Apec mis à jour avec succès via l'API interne du navigateur ! (HTTP {post_res.status})",
                         )
+                    else:
+                        logger.warning(
+                            "Mise à jour via API rejetée (HTTP %s). Repli sur l'interface graphique...",
+                            post_res.status,
+                        )
                 except Exception as e:
                     logger.debug("Erreur lors de la manipulation du JSON API : %s", e)
-
-            logger.debug("API directe HTTP %s : Passage au plan de repli via l'interface...", get_res.status)
+            else:
+                logger.debug("API directe HTTP %s : Passage au plan de repli via l'interface...", get_res.status)
 
             # --- Tentative 2 : Plan de repli via l'interface graphique Playwright ---
             if "carte-visite" not in page.url:
@@ -393,50 +480,88 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
             dismiss_cookie_banner(page)
 
             poste_input_selectors = [
-                "xpath=/html/body/main/apec-profil-cadre/apec-carte-visite/div/div[2]/div/div[1]/form/div[5]/input",
                 "input[formcontrolname='metierSouhaite']",
+                "xpath=/html/body/main/apec-profil-cadre/apec-carte-visite/div/div[2]/div/div[1]/form/div[5]/input",
+                "xpath=//apec-carte-visite//form//input[@formcontrolname='metierSouhaite']",
                 "input[name='metierSouhaite']",
                 "apec-carte-visite form input",
             ]
 
+            logger.debug("Attente de l'apparition du champ métier souhaité sur la carte de visite...")
             poste_input = None
-            for sel in poste_input_selectors:
+            start_wait = time.time()
+            while time.time() - start_wait < 30:
+                dismiss_cookie_banner(page)
+                for sel in poste_input_selectors:
+                    try:
+                        loc = page.locator(sel).first
+                        if loc.is_visible(timeout=1000):
+                            poste_input = loc
+                            logger.debug("Champ métier souhaité trouvé (%s)", sel)
+                            break
+                    except Exception:
+                        continue
+                if poste_input:
+                    break
+                time.sleep(1)
+
+            if not poste_input:
                 try:
-                    loc = page.locator(sel).first
-                    if loc.is_visible(timeout=3000):
-                        poste_input = loc
-                        logger.debug("Champ métier souhaité trouvé (%s)", sel)
-                        break
+                    debug_form = DATA_DIR / "debug_form_not_found.png"
+                    page.screenshot(path=str(debug_form))
+                    logger.warning(
+                        "Formulaire introuvable après 30s. Capture sauvegardée dans %s (URL: %s, Titre: '%s')",
+                        debug_form,
+                        page.url,
+                        page.title(),
+                    )
                 except Exception:
-                    continue
+                    pass
+                api_status = get_res.status if "get_res" in locals() else "N/A"
+                return False, f"Échec de la mise à jour (API HTTP {api_status} et formulaire introuvable)."
 
-            if poste_input:
-                logger.info("Saisie du nouveau poste : '%s'", nouveau_poste)
-                poste_input.click()
-                poste_input.fill("")
-                time.sleep(0.3)
-                poste_input.fill(nouveau_poste)
-                time.sleep(0.3)
+            logger.info("Saisie du nouveau poste : '%s'", nouveau_poste)
+            poste_input.click()
+            poste_input.fill("")
+            time.sleep(0.3)
+            poste_input.fill(nouveau_poste)
+            time.sleep(0.3)
 
-                save_button_selectors = [
-                    "xpath=/html/body/main/apec-profil-cadre/apec-carte-visite/div/div[2]/div/div[1]/form/div[9]/button",
-                    "button:has-text('Enregistrer')",
-                    "apec-carte-visite form button[type='submit']",
-                ]
+            save_button_selectors = [
+                "button:has-text('Enregistrer')",
+                "xpath=/html/body/main/apec-profil-cadre/apec-carte-visite/div/div[2]/div/div[1]/form/div[9]/button",
+                "xpath=//apec-carte-visite//form//button[@type='submit']",
+                "apec-carte-visite form button[type='submit']",
+                "apec-carte-visite form button",
+            ]
 
+            save_btn = None
+            start_btn_wait = time.time()
+            while time.time() - start_btn_wait < 15:
                 for sel in save_button_selectors:
                     try:
                         btn = page.locator(sel).first
-                        if btn.is_visible(timeout=2000):
-                            btn.click()
-                            logger.debug("Bouton Enregistrer cliqué (%s)", sel)
-                            time.sleep(3)
-                            save_cookies(cookies_path, context.cookies())
-                            return True, "Profil Apec mis à jour avec succès via l'interface graphique !"
+                        if btn.is_visible(timeout=1000):
+                            save_btn = btn
+                            logger.debug("Bouton Enregistrer trouvé (%s)", sel)
+                            break
                     except Exception:
                         continue
+                if save_btn:
+                    break
+                time.sleep(1)
 
-            return False, f"Échec de la mise à jour (API HTTP {get_res.status} et formulaire introuvable)."
+            if save_btn:
+                unlock_form_and_buttons(page)
+                save_btn.click()
+                logger.debug("Bouton Enregistrer cliqué.")
+                time.sleep(3)
+                save_cookies(cookies_path, context.cookies())
+                save_cookies(DATA_DIR / "cookie.json", context.cookies())
+                return True, "Profil Apec mis à jour avec succès via l'interface graphique !"
+            else:
+                logger.warning("Bouton Enregistrer introuvable.")
+                return False, "Formulaire trouvé mais bouton Enregistrer introuvable."
 
         except Exception as e:
             logger.error("Erreur durant l'exécution Playwright : %s", e)
