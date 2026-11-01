@@ -28,12 +28,13 @@ X11VNC_PID=$!
 sleep 1
 
 # 4. Démarrage du proxy Web noVNC (websockify)
-echo "4. Démarrage de noVNC sur http://0.0.0.0:6080 ..."
-websockify --web /usr/share/novnc 6080 localhost:5900 >/dev/null 2>&1 &
+NOVNC_PORT="${NOVNC_PORT:-${PORT:-6080}}"
+echo "4. Démarrage de noVNC sur http://0.0.0.0:${NOVNC_PORT} ..."
+websockify --web /usr/share/novnc "${NOVNC_PORT}" localhost:5900 >/dev/null 2>&1 &
 WEBSOCKIFY_PID=$!
 sleep 1
 
-echo "=== noVNC prêt ! Vous pouvez vous connecter sur http://<ip>:6080 ==="
+echo "=== noVNC prêt ! Vous pouvez vous connecter sur http://<ip>:${NOVNC_PORT} ==="
 
 # Fonction de nettoyage lors de l'arrêt
 cleanup() {

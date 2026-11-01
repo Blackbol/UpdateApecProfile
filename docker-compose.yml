@@ -5,9 +5,11 @@ services:
     container_name: UpdateApecProfile
     restart: unless-stopped
     ports:
-      # Interface noVNC pour voir le navigateur en direct : http://<ip>:6080
-      - "6080:6080"
+      # Interface noVNC pour voir le navigateur en direct : http://<ip>:${NOVNC_PORT:-${PORT:-6080}}
+      - "${NOVNC_PORT:-${PORT:-6080}}:${NOVNC_PORT:-${PORT:-6080}}"
     environment:
+      # Port noVNC personnalisable à la volée (ex: NOVNC_PORT=8080 ou PORT=8080)
+      - NOVNC_PORT=${NOVNC_PORT:-${PORT:-6080}}
       - APEC_USERNAME=${APEC_USERNAME:-votre_email@exemple.com}
       - APEC_PASSWORD=${APEC_PASSWORD:-votre_mot_de_passe}
       # Rotation des postes (obligatoire, séparés par des virgules) :
