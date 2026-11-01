@@ -11,6 +11,7 @@ from src.config import (
     HEADLESS,
     DATA_DIR,
     LOG_LEVEL,
+    NOVNC_PORT,
     logger,
 )
 from src.apec_api import save_cookies, API_URL
@@ -337,7 +338,7 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
                         logger.warning(
                             "\n========================================================================\n"
                             "⚠️  CHALLENGE DE SÉCURITÉ DÉTECTÉ !\n"
-                            "👉 Ouvrez votre navigateur sur : http://localhost:6080 (ou http://<ip>:6080)\n"
+                            f"👉 Ouvrez votre navigateur sur : http://localhost:{NOVNC_PORT} (ou http://<ip>:{NOVNC_PORT})\n"
                             "1. Résolvez le slider manuellement sur l'écran noVNC.\n"
                             "2. Si nécessaire, cliquez sur 'Se connecter' (le bouton a été déverrouillé).\n"
                             "3. NE RAFRAÎCHISSEZ PAS LA PAGE avec F5.\n"

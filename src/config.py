@@ -22,6 +22,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("UpdateApecProfile")
 
+# Port de l'interface noVNC
+NOVNC_PORT = (os.getenv("NOVNC_PORT") or os.getenv("PORT", "6080")).strip()
+
 # Identifiants APEC
 APEC_USERNAME = os.getenv("APEC_USERNAME", "").strip()
 APEC_PASSWORD = os.getenv("APEC_PASSWORD", "").strip()

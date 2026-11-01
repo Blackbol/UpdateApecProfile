@@ -28,6 +28,7 @@ Application moderne et légère pour automatiser la mise à jour quotidienne de 
 | `TZ` | Non | `Europe/Paris` | Fuseau horaire pour le planificateur cron. |
 | `LOG_LEVEL` | Non | `INFO` | Niveau de verbosité des logs (`INFO` ou `DEBUG`). |
 | `HEADLESS` | Non | `true` | Exécution du navigateur en arrière-plan sans interface graphique. |
+| `NOVNC_PORT` | Non | `6080` | Port d'accès web noVNC (configurable à la volée dans `.env` ou docker compose). |
 
 ---
 
@@ -41,7 +42,12 @@ services:
     image: ghcr.io/blackbol/update-apec-profile:latest
     container_name: UpdateApecProfile
     restart: unless-stopped
+    ports:
+      # Interface noVNC pour voir le navigateur en direct : http://<ip>:${NOVNC_PORT:-${PORT:-6080}}
+      - "${NOVNC_PORT:-${PORT:-6080}}:${NOVNC_PORT:-${PORT:-6080}}"
     environment:
+      # Port noVNC personnalisable à la volée (ex: NOVNC_PORT=8080 ou PORT=8080) :
+      - NOVNC_PORT=${NOVNC_PORT:-${PORT:-6080}}
       - TZ=Europe/Paris
       - APEC_USERNAME=votre_email@exemple.com
       - APEC_PASSWORD=votre_mot_de_passe
@@ -52,6 +58,8 @@ services:
       # Test immédiat au démarrage :
       - RUN_ON_STARTUP=true
       - LOG_LEVEL=INFO
+      # HEADLESS=false permet l'affichage dans noVNC
+      - HEADLESS=false
     volumes:
       # Volume pour conserver les cookies de session entre les redémarrages
       - ./data:/app/data
@@ -104,6 +112,7 @@ Si vous êtes déjà connecté sur **apec.fr** sur votre navigateur habituel san
    POSTE_DU_JOUR=Ingénieur logiciel, Développeur logiciel
    CRON_SCHEDULE=0 8 * * *
    RUN_ON_STARTUP=true
+   NOVNC_PORT=6080
    DATA_DIR=./data
    ```
 
