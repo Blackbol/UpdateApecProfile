@@ -20,6 +20,7 @@ touch ~/.fluxbox/init
 fluxbox >/dev/null 2>&1 &
 FLUXBOX_PID=$!
 sleep 1
+fbsetroot -solid "#2c3e50" >/dev/null 2>&1 || true
 
 # 3. Démarrage du serveur VNC (x11vnc)
 echo "3. Démarrage de x11vnc sur le port 5900..."

@@ -37,6 +37,7 @@ RUN mkdir -p /app/data
 ENV PYTHONUNBUFFERED=1
 ENV DATA_DIR=/app/data
 ENV DISPLAY=:99
+ENV HEADLESS=false
 
 # Port noVNC (accessible via http://<ip>:6080)
 EXPOSE 6080

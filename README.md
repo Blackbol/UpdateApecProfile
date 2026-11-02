@@ -27,7 +27,7 @@ Application moderne et légère pour automatiser la mise à jour quotidienne de 
 | `RUN_ON_STARTUP` | Non | `true` | Lance immédiatement une mise à jour au démarrage du conteneur. |
 | `TZ` | Non | `Europe/Paris` | Fuseau horaire pour le planificateur cron. |
 | `LOG_LEVEL` | Non | `INFO` | Niveau de verbosité des logs (`INFO` ou `DEBUG`). |
-| `HEADLESS` | Non | `true` | Exécution du navigateur en arrière-plan sans interface graphique. |
+| `HEADLESS` | Non | `false` | Exécution sans interface graphique (`false` par défaut dans le conteneur pour l'accès noVNC). |
 | `NOVNC_PORT` | Non | `6080` | Port d'accès web noVNC (configurable à la volée dans `.env` ou docker compose). |
 
 ---
@@ -59,7 +59,7 @@ services:
       - RUN_ON_STARTUP=true
       - LOG_LEVEL=INFO
       # HEADLESS=false permet l'affichage dans noVNC
-      - HEADLESS=false
+      - HEADLESS=${HEADLESS:-false}
     volumes:
       # Volume pour conserver les cookies de session entre les redémarrages
       - ./data:/app/data
@@ -113,6 +113,7 @@ Si vous êtes déjà connecté sur **apec.fr** sur votre navigateur habituel san
    CRON_SCHEDULE=0 8 * * *
    RUN_ON_STARTUP=true
    NOVNC_PORT=6080
+   HEADLESS=false
    DATA_DIR=./data
    ```
 

@@ -69,7 +69,8 @@ def update_carte_de_visite_via_api(cookies: dict[str, str], nouveau_poste: str) 
 
     try:
         session = requests.Session(impersonate="chrome124")
-        session.cookies.update(cookies)
+        for name, value in cookies.items():
+            session.cookies.set(name, str(value), domain=".apec.fr", path="/")
 
         logger.debug("Tentative de récupération du profil existant via l'API...")
         get_response = session.get(API_URL, headers=headers, timeout=15)

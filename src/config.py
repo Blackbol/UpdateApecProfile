@@ -48,7 +48,9 @@ def find_cookies_file() -> Path:
 COOKIES_FILE = find_cookies_file()
 CRON_SCHEDULE_RAW = os.getenv("CRON_SCHEDULE") or os.getenv("SCHEDULE_TIME", "0 8 * * *").strip()
 RUN_ON_STARTUP = os.getenv("RUN_ON_STARTUP", "true").lower() in ("true", "1", "yes")
-HEADLESS = os.getenv("HEADLESS", "true").lower() in ("true", "1", "yes")
+# HEADLESS vaut false par défaut si un écran X11 est disponible (contexte conteneur avec noVNC), sinon true
+default_headless = "false" if os.getenv("DISPLAY") else "true"
+HEADLESS = os.getenv("HEADLESS", default_headless).lower() in ("true", "1", "yes")
 
 
 def validate_config() -> None:
