@@ -9,7 +9,7 @@ env/
 venv/
 .env
 .env.local
-data/*.json
+data/*
 !data/.gitkeep
 README.md
 .vscode/

@@ -8,10 +8,13 @@ définitivement tout système anti-bot (DataDome).
 
 import sys
 import json
+import time
 import shutil
 from pathlib import Path
+from datetime import datetime
+from curl_cffi import requests
 from src.config import DATA_DIR, COOKIES_FILE, logger, get_poste_du_jour
-from src.apec_api import save_cookies, load_cookies, update_carte_de_visite_via_api
+from src.apec_api import save_cookies, load_cookies, update_carte_de_visite_via_api, API_URL, ORIGIN, REFERER
 
 
 def resolve_file_path(path_str: str) -> Path | None:
@@ -28,9 +31,8 @@ def resolve_file_path(path_str: str) -> Path | None:
 
 
 def sync_cookies_files(target_data: list | dict) -> None:
-    """Sauvegarde à la fois dans cookies.json et cookie.json pour compatibilité totale."""
+    """Sauvegarde les cookies dans cookie.json."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    save_cookies(DATA_DIR / "cookies.json", target_data)
     save_cookies(DATA_DIR / "cookie.json", target_data)
 
 
@@ -64,7 +66,7 @@ def import_from_text(raw_json_str: str) -> bool:
     try:
         data = json.loads(raw)
         sync_cookies_files(data)
-        logger.info("Cookies enregistrés avec succès dans %s", DATA_DIR / "cookies.json")
+        logger.info("Cookies enregistrés avec succès dans %s", DATA_DIR / "cookie.json")
         return verify_cookies(data)
     except Exception as e:
         logger.error("Format JSON invalide : %s", e)
@@ -72,15 +74,21 @@ def import_from_text(raw_json_str: str) -> bool:
 
 
 def verify_cookies(data: list | dict) -> bool:
-    """Vérifie la présence des cookies essentiels à la session Apec."""
-    cookie_names = set()
+    """Vérifie la présence et la validité des cookies essentiels à la session Apec."""
+    cookie_dict = {}
     if isinstance(data, list):
         for c in data:
-            if isinstance(c, dict) and "name" in c:
-                cookie_names.add(c["name"])
+            if isinstance(c, dict) and "name" in c and "value" in c:
+                cookie_dict[c["name"]] = str(c["value"])
     elif isinstance(data, dict):
-        cookie_names = set(data.keys())
+        if "cookies" in data and isinstance(data["cookies"], list):
+            for c in data["cookies"]:
+                if isinstance(c, dict) and "name" in c and "value" in c:
+                    cookie_dict[c["name"]] = str(c["value"])
+        else:
+            cookie_dict = {k: str(v) for k, v in data.items()}
 
+    cookie_names = set(cookie_dict.keys())
     logger.debug("Cookies détectés : %s", list(cookie_names))
 
     has_user = "apec.user.cookie" in cookie_names
@@ -98,8 +106,54 @@ def verify_cookies(data: list | dict) -> bool:
     if has_session:
         logger.info("✅ Cookie de session 'JSESSIONID' présent.")
 
+    # Vérification de l'horodatage d'expiration d'activité si disponible
+    if "apec_activity_cookie_timeout" in cookie_dict:
+        try:
+            timeout_ms = float(cookie_dict["apec_activity_cookie_timeout"])
+            timeout_dt = datetime.fromtimestamp(timeout_ms / 1000)
+            if timeout_ms / 1000 < time.time():
+                logger.warning(
+                    "⚠️ ATTENTION : Le cookie d'activité 'apec_activity_cookie_timeout' indique que la session a expiré le %s !",
+                    timeout_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                )
+            else:
+                logger.debug("Horodatage d'activité valide jusqu'au : %s", timeout_dt.strftime("%Y-%m-%d %H:%M:%S"))
+        except Exception:
+            pass
+
+    # Test de validité en direct auprès de l'API Apec
+    api_valid = False
+    if has_user:
+        try:
+            session = requests.Session(impersonate="chrome124")
+            for k, v in cookie_dict.items():
+                session.cookies.set(k, v, domain=".apec.fr", path="/")
+
+            headers = {
+                "accept": "application/json, text/plain, */*",
+                "origin": ORIGIN,
+                "referer": REFERER,
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            }
+            res = session.get(API_URL, headers=headers, timeout=10)
+            if res.status_code == 200:
+                api_valid = True
+                logger.info("🎉 Session testée avec succès auprès de l'API Apec (HTTP 200) ! Vos cookies sont actifs et utilisables.")
+            elif res.status_code in (400, 401, 403):
+                logger.warning(
+                    "⚠️ L'API Apec a retourné HTTP %s lors du test direct. "
+                    "La session est expirée ou invalidée côté serveur. "
+                    "Conseil : reconnectez-vous sur www.apec.fr sur votre navigateur et réexportez vos cookies.",
+                    res.status_code,
+                )
+        except Exception as e:
+            logger.debug("Impossible d'effectuer le test API direct : %s", e)
+
     if has_user and has_datadome:
-        logger.info("🎉 Vos cookies sont prêts et enregistrés dans le conteneur !")
+        if api_valid:
+            logger.info("Vos cookies sont prêts et enregistrés avec succès dans le conteneur !")
+        else:
+            logger.info("Cookies enregistrés. Si la session est expirée, Playwright tentera de renouveler la session automatiquement.")
         return True
     return False
 
@@ -122,12 +176,11 @@ def main():
             sys.exit(0 if success else 1)
     else:
         # Recherche automatique dans DATA_DIR
-        for candidate_name in ("cookie.json", "cookies.json"):
-            candidate = DATA_DIR / candidate_name
-            if candidate.exists() and candidate.stat().st_size > 10:
-                logger.info("Fichier trouvé automatiquement : %s", candidate)
-                success = import_from_json_file(candidate)
-                sys.exit(0 if success else 1)
+        candidate = DATA_DIR / "cookie.json"
+        if candidate.exists() and candidate.stat().st_size > 10:
+            logger.info("Fichier trouvé automatiquement : %s", candidate)
+            success = import_from_json_file(candidate)
+            sys.exit(0 if success else 1)
 
         logger.error("Aucun fichier de cookies trouvé dans %s. Veuillez déposer 'cookie.json'.", DATA_DIR)
         sys.exit(1)

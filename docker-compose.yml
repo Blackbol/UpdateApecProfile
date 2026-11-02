@@ -20,7 +20,7 @@ services:
       - RUN_ON_STARTUP=true
       - LOG_LEVEL=INFO
       # HEADLESS=false permet le rendu graphique visible via noVNC
-      - HEADLESS=false
+      - HEADLESS=${HEADLESS:-false}
     volumes:
       # Persistance des cookies de session et captures de diagnostic
       - ./data:/app/data

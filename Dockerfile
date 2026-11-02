@@ -24,8 +24,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du script d'entrée graphique noVNC
-COPY entrypoint.sh .
+# Copie du script d'entrée graphique noVNC et version
+COPY entrypoint.sh VERSION* ./
 RUN chmod +x entrypoint.sh
 
 # Copie du code source
@@ -37,6 +37,7 @@ RUN mkdir -p /app/data
 ENV PYTHONUNBUFFERED=1
 ENV DATA_DIR=/app/data
 ENV DISPLAY=:99
+ENV HEADLESS=false
 
 # Port noVNC (accessible via http://<ip>:6080)
 EXPOSE 6080

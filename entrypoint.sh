@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+APP_VERSION=$(cat /app/VERSION 2>/dev/null || cat VERSION 2>/dev/null || echo "2.1.0")
+echo "=== Démarrage de UpdateApecProfile (v${APP_VERSION}) ==="
 echo "=== Démarrage de l'environnement graphique virtuel ==="
 
 # Nettoyage des verrous X11 résiduels en cas de redémarrage de conteneur
@@ -20,6 +22,7 @@ touch ~/.fluxbox/init
 fluxbox >/dev/null 2>&1 &
 FLUXBOX_PID=$!
 sleep 1
+fbsetroot -solid "#2c3e50" >/dev/null 2>&1 || true
 
 # 3. Démarrage du serveur VNC (x11vnc)
 echo "3. Démarrage de x11vnc sur le port 5900..."

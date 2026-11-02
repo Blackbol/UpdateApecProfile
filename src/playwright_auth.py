@@ -420,7 +420,6 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
             # Sauvegarde immédiate des cookies acquis
             cookies = context.cookies()
             save_cookies(cookies_path, cookies)
-            save_cookies(DATA_DIR / "cookie.json", cookies)
             logger.debug("Nouveaux cookies sauvegardés dans %s", cookies_path)
 
             time.sleep(1)
@@ -458,7 +457,6 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
 
                     if post_res.status in (200, 204):
                         save_cookies(cookies_path, context.cookies())
-                        save_cookies(DATA_DIR / "cookie.json", context.cookies())
                         return (
                             True,
                             f"Profil Apec mis à jour avec succès via l'API interne du navigateur ! (HTTP {post_res.status})",
@@ -558,7 +556,6 @@ def authenticate_and_update(nouveau_poste: str, cookies_path: Path) -> Tuple[boo
                 logger.debug("Bouton Enregistrer cliqué.")
                 time.sleep(3)
                 save_cookies(cookies_path, context.cookies())
-                save_cookies(DATA_DIR / "cookie.json", context.cookies())
                 return True, "Profil Apec mis à jour avec succès via l'interface graphique !"
             else:
                 logger.warning("Bouton Enregistrer introuvable.")

@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from croniter import croniter
 
-from src.config import RUN_ON_STARTUP, get_cron_expression, logger
+from src.config import RUN_ON_STARTUP, get_cron_expression, VERSION, logger
 from src.main import run
 
 # Gestion de l'arrêt gracieux du conteneur (SIGTERM, SIGINT)
@@ -22,7 +22,7 @@ signal.signal(signal.SIGINT, handle_shutdown)
 
 
 def main():
-    logger.info("Démarrage du service UpdateApecProfile Scheduler (Cron standard)")
+    logger.info("Démarrage du service UpdateApecProfile Scheduler v%s (Cron standard)", VERSION)
 
     try:
         cron_expr = get_cron_expression()

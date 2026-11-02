@@ -22,6 +22,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger("UpdateApecProfile")
 
+
+def get_version() -> str:
+    """Récupère la version de l'application depuis le fichier VERSION."""
+    for p in (
+        Path(__file__).resolve().parent.parent / "VERSION",
+        Path("/app/VERSION"),
+        Path("VERSION"),
+    ):
+        if p.exists():
+            try:
+                return p.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
+    return "2.1.0"
+
+
+VERSION = get_version()
+
 # Port de l'interface noVNC
 NOVNC_PORT = (os.getenv("NOVNC_PORT") or os.getenv("PORT", "6080")).strip()
 
@@ -37,18 +55,16 @@ DATA_DIR = Path(os.getenv("DATA_DIR", "/app/data"))
 
 
 def find_cookies_file() -> Path:
-    """Recherche le fichier de cookies existant (cookies.json ou cookie.json)."""
-    for filename in ("cookies.json", "cookie.json"):
-        candidate = DATA_DIR / filename
-        if candidate.exists() and candidate.stat().st_size > 10:
-            return candidate
-    return DATA_DIR / "cookies.json"
+    """Recherche le fichier de cookies existant."""
+    return DATA_DIR / "cookie.json"
 
 
 COOKIES_FILE = find_cookies_file()
 CRON_SCHEDULE_RAW = os.getenv("CRON_SCHEDULE") or os.getenv("SCHEDULE_TIME", "0 8 * * *").strip()
 RUN_ON_STARTUP = os.getenv("RUN_ON_STARTUP", "true").lower() in ("true", "1", "yes")
-HEADLESS = os.getenv("HEADLESS", "true").lower() in ("true", "1", "yes")
+# HEADLESS vaut false par défaut si un écran X11 est disponible (contexte conteneur avec noVNC), sinon true
+default_headless = "false" if os.getenv("DISPLAY") else "true"
+HEADLESS = os.getenv("HEADLESS", default_headless).lower() in ("true", "1", "yes")
 
 
 def validate_config() -> None:
