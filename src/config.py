@@ -55,12 +55,8 @@ DATA_DIR = Path(os.getenv("DATA_DIR", "/app/data"))
 
 
 def find_cookies_file() -> Path:
-    """Recherche le fichier de cookies existant (cookies.json ou cookie.json)."""
-    for filename in ("cookies.json", "cookie.json"):
-        candidate = DATA_DIR / filename
-        if candidate.exists() and candidate.stat().st_size > 10:
-            return candidate
-    return DATA_DIR / "cookies.json"
+    """Recherche le fichier de cookies existant."""
+    return DATA_DIR / "cookie.json"
 
 
 COOKIES_FILE = find_cookies_file()

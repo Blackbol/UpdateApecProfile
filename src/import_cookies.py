@@ -31,9 +31,8 @@ def resolve_file_path(path_str: str) -> Path | None:
 
 
 def sync_cookies_files(target_data: list | dict) -> None:
-    """Sauvegarde à la fois dans cookies.json et cookie.json pour compatibilité totale."""
+    """Sauvegarde les cookies dans cookie.json."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    save_cookies(DATA_DIR / "cookies.json", target_data)
     save_cookies(DATA_DIR / "cookie.json", target_data)
 
 
@@ -67,7 +66,7 @@ def import_from_text(raw_json_str: str) -> bool:
     try:
         data = json.loads(raw)
         sync_cookies_files(data)
-        logger.info("Cookies enregistrés avec succès dans %s", DATA_DIR / "cookies.json")
+        logger.info("Cookies enregistrés avec succès dans %s", DATA_DIR / "cookie.json")
         return verify_cookies(data)
     except Exception as e:
         logger.error("Format JSON invalide : %s", e)
@@ -177,12 +176,11 @@ def main():
             sys.exit(0 if success else 1)
     else:
         # Recherche automatique dans DATA_DIR
-        for candidate_name in ("cookie.json", "cookies.json"):
-            candidate = DATA_DIR / candidate_name
-            if candidate.exists() and candidate.stat().st_size > 10:
-                logger.info("Fichier trouvé automatiquement : %s", candidate)
-                success = import_from_json_file(candidate)
-                sys.exit(0 if success else 1)
+        candidate = DATA_DIR / "cookie.json"
+        if candidate.exists() and candidate.stat().st_size > 10:
+            logger.info("Fichier trouvé automatiquement : %s", candidate)
+            success = import_from_json_file(candidate)
+            sys.exit(0 if success else 1)
 
         logger.error("Aucun fichier de cookies trouvé dans %s. Veuillez déposer 'cookie.json'.", DATA_DIR)
         sys.exit(1)

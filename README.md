@@ -86,7 +86,7 @@ Si vous êtes déjà connecté sur **apec.fr** sur votre navigateur habituel san
 1. Sur votre navigateur personnel, installez l'extension [Cookie-Editor](https://cookie-editor.com/) (Chrome, Firefox, Edge, Brave).
 2. Rendez-vous sur votre espace [apec.fr](https://www.apec.fr/) et vérifiez que vous êtes bien connecté.
 3. Cliquez sur l'icône de l'extension **Cookie-Editor**, puis sur **Export** > **Export as JSON**.
-4. Collez ou enregistrez ce JSON directement dans le fichier `data/cookies.json` du projet.
+4. Collez ou enregistrez ce JSON directement dans le fichier `data/cookie.json` du projet.
 5. Validez vos cookies immédiatement :
    ```bash
    docker compose run --rm updateapecprofile python -m src.import_cookies
