@@ -3,6 +3,7 @@ from src.config import (
     validate_config,
     get_poste_du_jour,
     COOKIES_FILE,
+    VERSION,
     logger,
 )
 from src.apec_api import load_cookies, update_carte_de_visite_via_api
@@ -17,7 +18,7 @@ def run() -> bool:
     3. Tentative d'appel API direct si les cookies sont en cache.
     4. En cas d'échec ou d'absence de cookies, reconnexion via Playwright furtif.
     """
-    logger.info("=== Début du rafraîchissement du profil APEC ===")
+    logger.info("=== Début du rafraîchissement du profil APEC (v%s) ===", VERSION)
 
     try:
         validate_config()

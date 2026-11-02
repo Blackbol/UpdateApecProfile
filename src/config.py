@@ -22,6 +22,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger("UpdateApecProfile")
 
+
+def get_version() -> str:
+    """Récupère la version de l'application depuis le fichier VERSION."""
+    for p in (
+        Path(__file__).resolve().parent.parent / "VERSION",
+        Path("/app/VERSION"),
+        Path("VERSION"),
+    ):
+        if p.exists():
+            try:
+                return p.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
+    return "2.1.0"
+
+
+VERSION = get_version()
+
 # Port de l'interface noVNC
 NOVNC_PORT = (os.getenv("NOVNC_PORT") or os.getenv("PORT", "6080")).strip()
 

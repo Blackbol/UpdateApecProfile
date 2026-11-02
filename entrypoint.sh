@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+APP_VERSION=$(cat /app/VERSION 2>/dev/null || cat VERSION 2>/dev/null || echo "2.1.0")
+echo "=== Démarrage de UpdateApecProfile (v${APP_VERSION}) ==="
 echo "=== Démarrage de l'environnement graphique virtuel ==="
 
 # Nettoyage des verrous X11 résiduels en cas de redémarrage de conteneur
